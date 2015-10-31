@@ -6,7 +6,7 @@ Input file is a simple JSON array of strings (URLs) `["http://github.com/adnanh/
 # Command line flags
 ```
   -workers int
-    number of concurrent workers (default 1)
+      number of concurrent workers (default 1)
   -fileprefix string
     	string to prefix the output filename
   -filesuffix string
@@ -30,6 +30,10 @@ Input file is a simple JSON array of strings (URLs) `["http://github.com/adnanh/
 - ratpoison
 - ImageMagick
 - midori
+
+## Get them via package manager
+### ArchLinux
+`sudo pacman -Sy xorg-server-xvfb ratpoison imagemagick midori`
 
 # License
 The MIT License (MIT)
