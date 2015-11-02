@@ -4,7 +4,7 @@ Simple tool that concurrently launches given amount of browser instances on virt
 Input file is a simple JSON array of strings (URLs) `["http://github.com/adnanh/webscrot", "http://news.ycombinator.com"]`
 
 # How to get it
-Make sure you've set up your `$GOPATH` environment variable properly and then run 
+Make sure you've set up your `GOPATH` environment variable properly and then run 
 ```
 go get github.com/adnanh/webscrot
 ```
