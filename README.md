@@ -1,34 +1,45 @@
 # webscrot
 Simple tool that concurrently launches given amount of browser instances on virtual displays, sleeps for specified time and takes a screenshot of the browser (page) until all URLs are exhausted.
 
-Input file is a simple JSON array of strings (URLs) `["http://github.com/adnanh/webscrot", "http://news.ycombinator.com"]`
+Input file should contain one URL per line, or a JSON array of strings (URLs) if used with `-json` flag.
+
+To have webscrot read from stdin use `-file -`
 
 # How to get it
-Make sure you've set up your `GOPATH` environment variable properly and then run 
+Make sure you've set up your `GOPATH` environment variable properly and then run
 ```
 go get github.com/adnanh/webscrot
 ```
 
 # Command line flags
 ```
-  -workers int
-      number of concurrent workers (default 1)
-  -fileprefix string
-    	string to prefix the output filename
-  -filesuffix string
-    	string to suffix the output filename
-  -width int
-    	screen width (default 1024)
-  -height int
-    	screen height (default 768)
-  -outputpath string
-    	path where the screenshots should be saved (default "./")
-  -timeout int
-    	number of milliseconds to wait before taking a screenshot (default 5000)
-  -urlfile string
-    	path to the JSON file containg an array of urls (default "url.json")
-  -urlprefix string
-    	string to prefix the urls from JSON file
+-json
+    parse input file as JSON array of strings
+-delay int
+    number of milliseconds to wait before taking a screenshot (default 5000)
+-display-number-offset int
+    number to offset display number for (default 99)
+-file string
+    path to the input file, use - for stdin (default "-")
+-filename-extension string
+    filename extension to use for ImageMagick import command (default "png")
+-filename-prefix string
+    string to prefix the output filename with
+-filename-suffix string
+    string to suffix the output filename with
+-width int
+    screen width (default 1024)
+-height int
+    screen height (default 768)
+-output-path string
+    path where the screenshots should be saved (default "./")
+-url-prefix string
+    string to prefix the input urls with
+-url-suffix string
+    string to sufix the input urls with
+-workers int
+    number of concurrent workers (default 1)
+
 ```
 
 # Requirements

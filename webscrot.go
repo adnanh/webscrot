@@ -1,10 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"regexp"
@@ -16,32 +16,69 @@ var (
 	mainPipe   chan bool
 	jobDone    = false
 
-	workerCount    = flag.Int("workers", 1, "number of concurrent workers")
-	timeout        = flag.Int("timeout", 5000, "number of milliseconds to wait before taking a screenshot")
-	width          = flag.Int("width", 1024, "screen width")
-	height         = flag.Int("height", 768, "screen height")
-	urlPrefix      = flag.String("urlprefix", "", "string to prefix the urls from JSON file")
-	urlFile        = flag.String("urlfile", "url.json", "path to the JSON file containg an array of urls")
-	path           = flag.String("outputpath", "./", "path where the screenshots should be saved")
-	filenamePrefix = flag.String("fileprefix", "", "string to prefix the output filename")
-	filenameSuffix = flag.String("filesuffix", "", "string to suffix the output filename")
+	workerCount         = flag.Int("workers", 1, "number of concurrent workers")
+	delay               = flag.Int("delay", 5000, "number of milliseconds to wait before taking a screenshot")
+	width               = flag.Int("width", 1024, "screen width")
+	height              = flag.Int("height", 768, "screen height")
+	urlPrefix           = flag.String("url-prefix", "", "string to prefix the input urls with")
+	urlSuffix           = flag.String("url-suffix", "", "string to sufix the input urls with")
+	urlFile             = flag.String("file", "-", "path to the input file")
+	isJSON              = flag.Bool("json", false, "parse input file as JSON array of strings")
+	outputPath          = flag.String("output-path", "./", "path where the screenshots should be saved")
+	filenamePrefix      = flag.String("filename-prefix", "", "string to prefix the output filename with")
+	filenameSuffix      = flag.String("filename-suffix", "", "string to suffix the output filename with")
+	filenameExtension   = flag.String("filename-extension", "png", "filename extension to use for ImageMagick import command")
+	displayNumberOffset = flag.Int("display-number-offset", 99, "number to offset display number for")
 )
 
-type task []string
+func prepareTasks() (*[]string, error) {
+	var tasks []string
 
-func prepareTasks() (*task, error) {
-	tasks := &task{}
-	file, e := ioutil.ReadFile(*urlFile)
-	if e != nil {
-		return nil, e
+	var scanner *bufio.Scanner
+	var err error
+
+	if *urlFile == "-" {
+		scanner = bufio.NewScanner(os.Stdin)
+	} else {
+		file, err := os.Open(*urlFile)
+		if err != nil {
+			return nil, err
+		}
+		defer file.Close()
+		scanner = bufio.NewScanner(file)
 	}
 
-	json.Unmarshal(file, tasks)
-	return tasks, e
+	if *isJSON {
+		var jsonInput []byte
+
+		scanner.Split(bufio.ScanBytes)
+
+		for scanner.Scan() {
+			for _, b := range scanner.Bytes() {
+				jsonInput = append(jsonInput, b)
+			}
+		}
+		if err := scanner.Err(); err != nil {
+			return nil, err
+		}
+
+		if err = json.Unmarshal(jsonInput, &tasks); err != nil {
+			return nil, err
+		}
+	} else {
+		for scanner.Scan() {
+			tasks = append(tasks, scanner.Text())
+		}
+		if err := scanner.Err(); err != nil {
+			return nil, err
+		}
+	}
+
+	return &tasks, err
 }
 
 func processTask(id int) {
-	idString := fmt.Sprintf(":%d", id+99)
+	idString := fmt.Sprintf(":%d", id+*displayNumberOffset)
 
 	virtualDisplay := exec.Command("Xvfb", idString, "-screen", "0", fmt.Sprintf("%dx%dx16", *width, *height))
 	ratpoison := exec.Command("ratpoison", "-d", idString)
@@ -68,15 +105,15 @@ func processTask(id int) {
 		select {
 		case url := <-workerPipe:
 			fmt.Printf("[%d] Processing %s\n", id, url)
-			browser := exec.Command("midori", "--display", idString, "-e", "Fullscreen", "-a", fmt.Sprintf("%s%s", *urlPrefix, url))
+			browser := exec.Command("midori", "--display", idString, "-e", "Fullscreen", "-a", fmt.Sprintf("%s%s%s", *urlPrefix, url, *urlSuffix))
 			err := browser.Start()
 			if err != nil {
 				fmt.Printf("[%d] Cannot start browser.\n%v+\n", id, err)
 				mainPipe <- true
 			} else {
 				reg, _ := regexp.Compile("[^A-Za-z0-9]+")
-				time.Sleep(time.Duration(*timeout) * time.Millisecond)
-				screenshot := exec.Command("import", "-display", idString, "-window", "root", fmt.Sprintf("%s/%s%s%s.png", *path, *filenamePrefix, reg.ReplaceAllString(url, "-"), *filenameSuffix))
+				time.Sleep(time.Duration(*delay) * time.Millisecond)
+				screenshot := exec.Command("import", "-display", idString, "-window", "root", fmt.Sprintf("%s/%s%s%s.%s", *outputPath, *filenamePrefix, reg.ReplaceAllString(url, "-"), *filenameSuffix, *filenameExtension))
 				screenshot.Dir, _ = os.Getwd()
 				out, err := screenshot.CombinedOutput()
 				if err != nil {
