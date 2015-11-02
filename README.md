@@ -31,6 +31,8 @@ go get github.com/adnanh/webscrot
     screen width (default 1024)
 -height int
     screen height (default 768)
+-depth int
+	 screen color depth (default 24)  
 -output-path string
     path where the screenshots should be saved (default "./")
 -url-prefix string

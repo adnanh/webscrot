@@ -20,9 +20,10 @@ var (
 	delay               = flag.Int("delay", 5000, "number of milliseconds to wait before taking a screenshot")
 	width               = flag.Int("width", 1024, "screen width")
 	height              = flag.Int("height", 768, "screen height")
+	depth               = flag.Int("depth", 24, "screen color depth")
 	urlPrefix           = flag.String("url-prefix", "", "string to prefix the input urls with")
 	urlSuffix           = flag.String("url-suffix", "", "string to sufix the input urls with")
-	urlFile             = flag.String("file", "-", "path to the input file")
+	urlFile             = flag.String("file", "-", "path to the input file, use - for stdin")
 	isJSON              = flag.Bool("json", false, "parse input file as JSON array of strings")
 	outputPath          = flag.String("output-path", "./", "path where the screenshots should be saved")
 	filenamePrefix      = flag.String("filename-prefix", "", "string to prefix the output filename with")
@@ -80,7 +81,7 @@ func prepareTasks() (*[]string, error) {
 func processTask(id int) {
 	idString := fmt.Sprintf(":%d", id+*displayNumberOffset)
 
-	virtualDisplay := exec.Command("Xvfb", idString, "-screen", "0", fmt.Sprintf("%dx%dx16", *width, *height))
+	virtualDisplay := exec.Command("Xvfb", idString, "-screen", "0", fmt.Sprintf("%dx%dx%d", *width, *height, *depth))
 	ratpoison := exec.Command("ratpoison", "-d", idString)
 
 	err := virtualDisplay.Start()
