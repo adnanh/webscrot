@@ -84,6 +84,7 @@ func processTask(id int) {
 				}
 
 				browser.Process.Kill()
+				browser.Wait()
 				fmt.Printf("[%d] Finished processing %s\n", id, url)
 				mainPipe <- true
 			}
@@ -95,11 +96,14 @@ func processTask(id int) {
 	}
 
 CLEANUP:
-	if virtualDisplay != nil {
-		virtualDisplay.Process.Kill()
-	}
 	if ratpoison != nil {
 		ratpoison.Process.Kill()
+		ratpoison.Wait()
+	}
+
+	if virtualDisplay != nil {
+		virtualDisplay.Process.Kill()
+		virtualDisplay.Wait()
 	}
 DONE:
 	mainPipe <- false
